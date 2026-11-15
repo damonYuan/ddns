@@ -1,0 +1,18 @@
+---
+- name: Copy the DDNS update script
+  ansible.builtin.template:
+    src: ddns.sh
+    dest: "{{ ddns_base_dir }}/{{ item.name }}-ddns.sh"
+    mode: '0700'
+  become: true
+  become_user: "{{ ddns_user }}"
+
+- name: Schedule the DDNS update script
+  ansible.builtin.cron:
+    name: "Run {{ item.name }}-ddns.sh"
+    minute: "{{ ddns_cron_minute }}"
+    user: "{{ ddns_user }}"
+    job: >-
+      {{ ddns_base_dir }}/{{ item.name }}-ddns.sh >>
+      {{ ddns_base_dir }}/logs/{{ item.name }}-ddns.log 2>&1
+  become: true

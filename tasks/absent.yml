@@ -1,0 +1,30 @@
+---
+- name: Remove DDNS cron jobs
+  ansible.builtin.cron:
+    name: "Run {{ item.name }}-ddns.sh"
+    user: "{{ ddns_user }}"
+    state: absent
+  become: true
+  loop: "{{ ddns_records }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Remove DDNS scripts
+  ansible.builtin.file:
+    path: "{{ ddns_base_dir }}/{{ item.name }}-ddns.sh"
+    state: absent
+  become: true
+  loop: "{{ ddns_records }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Remove DDNS data on purge
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  become: true
+  loop:
+    - "{{ ddns_base_dir }}"
+    - "{{ ddns_logs_dir }}"
+    - /etc/logrotate.d/ddns-logrotate.conf
+  when: ddns_state == 'purged'

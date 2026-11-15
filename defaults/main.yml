@@ -1,0 +1,12 @@
+---
+ddns_state: present
+ddns_user: app
+ddns_base_dir: /data/apps/ddns
+ddns_logs_dir: /data/logs/ddns
+ddns_cron_minute: "*/10"
+ddns_ttl: 3600
+ddns_zone: ""
+ddns_records: []
+ddns_cloudflare_zone_id: ""
+ddns_cloudflare_api_token: ""
+ddns_notify_email: ""

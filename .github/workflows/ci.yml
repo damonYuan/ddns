@@ -1,0 +1,27 @@
+---
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install lint tools
+        run: pip install ansible-core ansible-lint yamllint
+      - name: Lint YAML
+        run: yamllint .
+      - name: Lint Ansible
+        run: ansible-lint
+      - name: Syntax check
+        env:
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/..
+        run: ansible-playbook -i tests/inventory --syntax-check tests/test.yml

@@ -1,0 +1,13 @@
+---
+- name: Test the ddns role
+  hosts: localhost
+  gather_facts: false
+  vars:
+    ddns_zone: example.com
+    ddns_cloudflare_zone_id: test-zone
+    ddns_cloudflare_api_token: test-token
+    ddns_records:
+      - name: home
+        proxied: false
+  roles:
+    - ddns

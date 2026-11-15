@@ -1,0 +1,8 @@
+---
+- name: Remove DDNS artifacts
+  ansible.builtin.include_tasks: absent.yml
+  when: ddns_state in ['absent', 'purged']
+
+- name: Install DDNS
+  ansible.builtin.include_tasks: present.yml
+  when: ddns_state == 'present'

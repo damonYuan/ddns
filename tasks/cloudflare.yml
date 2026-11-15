@@ -1,0 +1,47 @@
+---
+- name: Check whether the A record exists
+  ansible.builtin.uri:
+    url: "https://api.cloudflare.com/client/v4/zones/{{ ddns_cloudflare_zone_id }}/dns_records?type=A&name={{ item.name }}.{{ ddns_zone }}"
+    method: GET
+    body_format: json
+    status_code: [200, 202]
+    return_content: true
+    headers:
+      Authorization: "Bearer {{ ddns_cloudflare_api_token }}"
+      Content-Type: application/json
+  register: ddns_cloudflare_records
+  changed_when: false
+
+- name: Create the A record
+  ansible.builtin.uri:
+    url: "https://api.cloudflare.com/client/v4/zones/{{ ddns_cloudflare_zone_id }}/dns_records"
+    method: POST
+    body_format: json
+    status_code: [200, 202]
+    return_content: true
+    headers:
+      Authorization: "Bearer {{ ddns_cloudflare_api_token }}"
+      Content-Type: application/json
+    body:
+      type: A
+      name: "{{ item.name }}.{{ ddns_zone }}"
+      content: "{{ ddns_public_ip }}"
+      proxied: "{{ item.proxied | default(false) | bool }}"
+  when: ddns_cloudflare_records.json.result | length == 0
+
+- name: Update the A record
+  ansible.builtin.uri:
+    url: "https://api.cloudflare.com/client/v4/zones/{{ ddns_cloudflare_zone_id }}/dns_records/{{ ddns_cloudflare_records.json.result[0].id }}"
+    method: PUT
+    body_format: json
+    status_code: [200, 202]
+    return_content: true
+    headers:
+      Authorization: "Bearer {{ ddns_cloudflare_api_token }}"
+      Content-Type: application/json
+    body:
+      type: A
+      name: "{{ item.name }}.{{ ddns_zone }}"
+      content: "{{ ddns_public_ip }}"
+      proxied: "{{ item.proxied | default(false) | bool }}"
+  when: ddns_cloudflare_records.json.result | length > 0

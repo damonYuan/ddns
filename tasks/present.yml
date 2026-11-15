@@ -1,0 +1,67 @@
+---
+- name: Validate required variables
+  ansible.builtin.assert:
+    that:
+      - ddns_zone | length > 0
+      - ddns_cloudflare_zone_id | length > 0
+      - ddns_cloudflare_api_token | length > 0
+      - ddns_records | length > 0
+    fail_msg: >-
+      ddns_zone, ddns_cloudflare_zone_id, ddns_cloudflare_api_token and
+      ddns_records must be set.
+
+- name: Ensure the DDNS user exists
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ ddns_user }}"
+
+- name: Create DDNS directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ddns_user }}"
+    group: "{{ ddns_user }}"
+    mode: '0775'
+  become: true
+  loop:
+    - "{{ ddns_base_dir }}"
+    - "{{ ddns_logs_dir }}"
+
+- name: Link DDNS logs directory
+  ansible.builtin.file:
+    src: "{{ ddns_logs_dir }}"
+    dest: "{{ ddns_base_dir }}/logs"
+    state: link
+    owner: "{{ ddns_user }}"
+    group: "{{ ddns_user }}"
+  become: true
+
+- name: Create DDNS logrotate configuration
+  ansible.builtin.template:
+    src: logrotate.conf
+    dest: /etc/logrotate.d/ddns-logrotate.conf
+    mode: '0644'
+  become: true
+
+- name: Look up the host's public IPv4 address
+  ansible.builtin.uri:
+    url: https://api.ipify.org
+    return_content: true
+  register: ddns_public_ip_response
+  changed_when: false
+
+- name: Set the public IPv4 address
+  ansible.builtin.set_fact:
+    ddns_public_ip: "{{ ddns_public_ip_response.content | trim }}"
+
+- name: Configure Cloudflare A records
+  ansible.builtin.include_tasks: cloudflare.yml
+  loop: "{{ ddns_records }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configure DDNS cron jobs
+  ansible.builtin.include_tasks: ddns.yml
+  loop: "{{ ddns_records }}"
+  loop_control:
+    label: "{{ item.name }}"
