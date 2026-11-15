@@ -1,5 +1,7 @@
 ---
 galaxy_info:
+  namespace: damonyuan
+  role_name: ddns
   author: Damon Yuan
   description: Cloudflare DDNS updater with cron and optional email notifications
   license: MIT

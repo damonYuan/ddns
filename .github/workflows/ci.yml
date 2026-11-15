@@ -20,6 +20,8 @@ jobs:
       - name: Lint YAML
         run: yamllint .
       - name: Lint Ansible
+        env:
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/..
         run: ansible-lint
       - name: Syntax check
         env:
